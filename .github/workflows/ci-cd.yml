@@ -1,0 +1,67 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint (opcional)
+        run: |
+          if [ -f package.json ] && npm run | grep -q lint; then npm run lint; else echo "No lint script"; fi
+
+      - name: Build (TypeScript)
+        run: |
+          if [ -f tsconfig.json ]; then npx tsc --noEmit false; else echo "No TypeScript config"; fi
+
+      - name: Run tests (opcional)
+        run: |
+          if [ -f package.json ] && npm run | grep -q test; then npm test; else echo "No test script"; fi
+
+      - name: Docker build (opcional)
+        run: |
+          if [ -f Dockerfile ]; then docker build -t laritechfarms-backend .; else echo "No Dockerfile"; fi
+        # Solo se ejecuta si tienes Dockerfile y runner con Docker
+
+# Para despliegue automático, agrega otro job aquí según tu entorno (ejemplo: SSH, Docker Hub, etc.)
+
+# =====================
+# Deploy automático a producción por SSH
+# =====================
+  deploy:
+    name: Deploy to Production (SSH)
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.PROD_SSH_KEY }}
+
+      - name: Deploy files via SCP
+        run: |
+          scp -r -o StrictHostKeyChecking=no ./ usuario@123.123.123.123:/home/usuario/laritechfarms_backend_node
+        # Cambia usuario, IP y ruta destino por los de tu servidor
+
+      - name: Run remote commands (restart service)
+        run: |
+          ssh -o StrictHostKeyChecking=no usuario@123.123.123.123 'cd /home/usuario/laritechfarms_backend_node && docker compose down && docker compose up -d'
+        # Modifica el comando según tu entorno (puede ser pm2, systemctl, etc)
+
+# =====================

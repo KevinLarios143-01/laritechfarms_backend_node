@@ -125,5 +125,3 @@ Ver carpeta `scripts/` y su README para detalles de scripts útiles para migraci
 - Elimina archivos que ya no se usen para mantener el proyecto limpio.
 
 ---
-
-¿Dudas? Consulta este archivo, el README principal o pregunta al equipo de desarrollo.
