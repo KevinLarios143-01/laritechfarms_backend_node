@@ -1,3 +1,59 @@
+// Obtener lista de clientes paginada y filtrada
+export const getClientes = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json(createErrorResponse('No autorizado', 401))
+    }
+    const pagination = extractPagination(req)
+    const { search } = req.query
+    const where: any = { id_tenant: req.user.id_tenant }
+    if (search) {
+      where.OR = [
+        { nombre: { contains: search, mode: 'insensitive' } },
+        { telefono: { contains: search, mode: 'insensitive' } },
+        { correo: { contains: search, mode: 'insensitive' } },
+        { direccion: { contains: search, mode: 'insensitive' } },
+        { ruc: { contains: search, mode: 'insensitive' } }
+      ]
+    }
+    const [clientes, total] = await Promise.all([
+      prisma.cliente.findMany({
+        where,
+        skip: pagination.skip,
+        take: pagination.limit,
+        orderBy: { fecha_registro: 'desc' }
+      }),
+      prisma.cliente.count({ where })
+    ])
+    res.json(createPaginatedResponse(clientes, total, pagination))
+  } catch (error) {
+    console.error('Error en getClientes:', error)
+    res.status(500).json(createErrorResponse('Error interno del servidor'))
+  }
+}
+
+// Obtener un cliente por ID
+export const getClienteById = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json(createErrorResponse('No autorizado', 401))
+    }
+    const id_cliente = parseInt(req.params.id)
+    const cliente = await prisma.cliente.findFirst({
+      where: {
+        id_cliente,
+        id_tenant: req.user.id_tenant
+      }
+    })
+    if (!cliente) {
+      return res.status(404).json(createErrorResponse('Cliente no encontrado', 404))
+    }
+    res.json(createSuccessResponse(cliente))
+  } catch (error) {
+    console.error('Error en getClienteById:', error)
+    res.status(500).json(createErrorResponse('Error interno del servidor'))
+  }
+}
 import { Response } from 'express'
 import { prisma } from '../services/database'
 import { AuthenticatedRequest } from '../types'
@@ -10,219 +66,7 @@ import {
   validateRequired
 } from '../utils/helpers'
 
-/**
- * @swagger
- * components:
- *   schemas:
- *     Cliente:
- *       type: object
- *       properties:
- *         id_cliente:
- *           type: integer
- *         id_tenant:
- *           type: integer
- *         nombre:
- *           type: string
- *         telefono:
- *           type: string
- *         correo:
- *           type: string
- *         direccion:
- *           type: string
- *         ruc:
- *           type: string
- *         fecha_registro:
- *           type: string
- *           format: date
- */
 
-/**
- * @swagger
- * /clientes:
- *   get:
- *     summary: Obtener clientes
- *     tags: [Clientes]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *       - in: query
- *         name: search
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Lista de clientes
- */
-export const getClientes = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json(createErrorResponse('No autorizado', 401))
-    }
-
-    const pagination = extractPagination(req)
-    const filters = parseFilters(req.query)
-
-    const whereClause: any = {
-      id_tenant: req.user.id_tenant
-    }
-
-    if (filters.search) {
-      whereClause.OR = [
-        {
-          nombre: {
-            contains: filters.search,
-            mode: 'insensitive'
-          }
-        },
-        {
-          telefono: {
-            contains: filters.search,
-            mode: 'insensitive'
-          }
-        },
-        {
-          correo: {
-            contains: filters.search,
-            mode: 'insensitive'
-          }
-        }
-      ]
-    }
-
-    const [clientes, total] = await Promise.all([
-      prisma.cliente.findMany({
-        where: whereClause,
-        skip: pagination.skip,
-        take: pagination.limit,
-        include: {
-          _count: {
-            select: {
-              ventas: true
-            }
-          }
-        },
-        orderBy: { nombre: 'asc' }
-      }),
-      prisma.cliente.count({ where: whereClause })
-    ])
-
-    const response = createPaginatedResponse(clientes, total, pagination)
-    res.json(createSuccessResponse(response))
-
-  } catch (error) {
-    console.error('Error en getClientes:', error)
-    res.status(500).json(createErrorResponse('Error interno del servidor'))
-  }
-}
-
-/**
- * @swagger
- * /clientes/{id}:
- *   get:
- *     summary: Obtener cliente por ID
- *     tags: [Clientes]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Datos del cliente
- *       404:
- *         description: Cliente no encontrado
- */
-export const getClienteById = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json(createErrorResponse('No autorizado', 401))
-    }
-
-    const id_cliente = parseInt(req.params.id)
-
-    const cliente = await prisma.cliente.findFirst({
-      where: {
-        id_cliente,
-        id_tenant: req.user.id_tenant
-      },
-      include: {
-        ventas: {
-          orderBy: { fecha: 'desc' },
-          take: 10,
-          select: {
-            id_venta: true,
-            fecha: true,
-            total: true,
-            estado: true
-          }
-        },
-        _count: {
-          select: {
-            ventas: true
-          }
-        }
-      }
-    })
-
-    if (!cliente) {
-      return res.status(404).json(createErrorResponse('Cliente no encontrado', 404))
-    }
-
-    res.json(createSuccessResponse(cliente))
-
-  } catch (error) {
-    console.error('Error en getClienteById:', error)
-    res.status(500).json(createErrorResponse('Error interno del servidor'))
-  }
-}
-
-/**
- * @swagger
- * /clientes:
- *   post:
- *     summary: Crear nuevo cliente
- *     tags: [Clientes]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - nombre
- *             properties:
- *               nombre:
- *                 type: string
- *               telefono:
- *                 type: string
- *               correo:
- *                 type: string
- *               direccion:
- *                 type: string
- *               ruc:
- *                 type: string
- *     responses:
- *       201:
- *         description: Cliente creado exitosamente
- */
 export const createCliente = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -257,33 +101,6 @@ export const createCliente = async (req: AuthenticatedRequest, res: Response) =>
   }
 }
 
-/**
- * @swagger
- * /clientes/{id}:
- *   put:
- *     summary: Actualizar cliente
- *     tags: [Clientes]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Cliente'
- *     responses:
- *       200:
- *         description: Cliente actualizado exitosamente
- *       404:
- *         description: Cliente no encontrado
- */
 export const updateCliente = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -323,29 +140,6 @@ export const updateCliente = async (req: AuthenticatedRequest, res: Response) =>
   }
 }
 
-/**
- * @swagger
- * /clientes/{id}:
- *   delete:
- *     summary: Eliminar cliente
- *     tags: [Clientes]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Cliente eliminado exitosamente
- *       404:
- *         description: Cliente no encontrado
- *       400:
- *         description: No se puede eliminar el cliente (tiene ventas asociadas)
- */
 export const deleteCliente = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -390,37 +184,6 @@ export const deleteCliente = async (req: AuthenticatedRequest, res: Response) =>
   }
 }
 
-/**
- * @swagger
- * /clientes/{id}/ventas:
- *   get:
- *     summary: Obtener ventas de un cliente
- *     tags: [Clientes]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *     responses:
- *       200:
- *         description: Ventas del cliente
- *       404:
- *         description: Cliente no encontrado
- */
 export const getVentasCliente = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {

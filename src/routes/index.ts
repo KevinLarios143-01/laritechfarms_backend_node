@@ -19,7 +19,7 @@ const router = Router()
 
 /**
  * @swagger
- * /api/v1:
+ * /test:
  *   get:
  *     summary: API Status
  *     description: Endpoint para verificar el estado de la API
@@ -44,7 +44,7 @@ const router = Router()
  */
 
 // API Status endpoint
-router.get('/', (req, res) => {
+router.get('/test', (req, res) => {
   res.json({
     message: 'LariTechFarms API v1.0.0 - Sistema de Gestión Avícola',
     version: '1.0.0',

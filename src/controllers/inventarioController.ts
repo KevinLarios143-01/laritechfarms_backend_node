@@ -10,69 +10,7 @@ import {
   validateRequired
 } from '../utils/helpers'
 
-/**
- * @swagger
- * components:
- *   schemas:
- *     InventarioGranja:
- *       type: object
- *       properties:
- *         id_inventario:
- *           type: integer
- *         id_tenant:
- *           type: integer
- *         nombre:
- *           type: string
- *         cantidad:
- *           type: integer
- *         unidad:
- *           type: string
- *         categoria:
- *           type: string
- *         minimo_stock:
- *           type: integer
- *         proveedor:
- *           type: string
- *         observaciones:
- *           type: string
- */
 
-/**
- * @swagger
- * /inventario:
- *   get:
- *     summary: Obtener inventario
- *     tags: [Inventario]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *       - in: query
- *         name: search
- *         schema:
- *           type: string
- *       - in: query
- *         name: categoria
- *         schema:
- *           type: string
- *       - in: query
- *         name: stock_bajo
- *         schema:
- *           type: boolean
- *     responses:
- *       200:
- *         description: Lista de inventario
- */
 export const getInventario = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -158,27 +96,6 @@ export const getInventario = async (req: AuthenticatedRequest, res: Response) =>
   }
 }
 
-/**
- * @swagger
- * /inventario/{id}:
- *   get:
- *     summary: Obtener item de inventario por ID
- *     tags: [Inventario]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Datos del item de inventario
- *       404:
- *         description: Item no encontrado
- */
 export const getInventarioById = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -218,44 +135,6 @@ export const getInventarioById = async (req: AuthenticatedRequest, res: Response
   }
 }
 
-/**
- * @swagger
- * /inventario:
- *   post:
- *     summary: Crear nuevo item de inventario
- *     tags: [Inventario]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - nombre
- *               - cantidad
- *               - unidad
- *             properties:
- *               nombre:
- *                 type: string
- *               cantidad:
- *                 type: integer
- *               unidad:
- *                 type: string
- *               categoria:
- *                 type: string
- *               minimo_stock:
- *                 type: integer
- *               proveedor:
- *                 type: string
- *               observaciones:
- *                 type: string
- *     responses:
- *       201:
- *         description: Item de inventario creado exitosamente
- */
 export const createInventario = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -292,33 +171,6 @@ export const createInventario = async (req: AuthenticatedRequest, res: Response)
   }
 }
 
-/**
- * @swagger
- * /inventario/{id}:
- *   put:
- *     summary: Actualizar item de inventario
- *     tags: [Inventario]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/InventarioGranja'
- *     responses:
- *       200:
- *         description: Item de inventario actualizado exitosamente
- *       404:
- *         description: Item no encontrado
- */
 export const updateInventario = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -360,44 +212,6 @@ export const updateInventario = async (req: AuthenticatedRequest, res: Response)
   }
 }
 
-/**
- * @swagger
- * /inventario/{id}/stock:
- *   patch:
- *     summary: Actualizar cantidad en stock
- *     tags: [Inventario]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - operacion
- *               - cantidad
- *             properties:
- *               operacion:
- *                 type: string
- *                 enum: [entrada, salida, ajuste]
- *               cantidad:
- *                 type: integer
- *               observaciones:
- *                 type: string
- *     responses:
- *       200:
- *         description: Stock actualizado exitosamente
- *       404:
- *         description: Item no encontrado
- */
 export const updateStock = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -464,19 +278,6 @@ export const updateStock = async (req: AuthenticatedRequest, res: Response) => {
   }
 }
 
-/**
- * @swagger
- * /inventario/categorias:
- *   get:
- *     summary: Obtener categorías de inventario
- *     tags: [Inventario]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     responses:
- *       200:
- *         description: Lista de categorías
- */
 export const getCategorias = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -504,19 +305,6 @@ export const getCategorias = async (req: AuthenticatedRequest, res: Response) =>
   }
 }
 
-/**
- * @swagger
- * /inventario/alertas:
- *   get:
- *     summary: Obtener alertas de stock bajo
- *     tags: [Inventario]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     responses:
- *       200:
- *         description: Items con stock bajo o crítico
- */
 export const getAlertas = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {

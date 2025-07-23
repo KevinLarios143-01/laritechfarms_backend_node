@@ -9,69 +9,7 @@ import {
   parseFilters 
 } from '../utils/helpers'
 
-/**
- * @swagger
- * components:
- *   schemas:
- *     Lote:
- *       type: object
- *       properties:
- *         id_lote:
- *           type: integer
- *         id_tenant:
- *           type: integer
- *         tipo:
- *           type: string
- *           enum: [Ponedoras, Engorde]
- *         fecha_inicio:
- *           type: string
- *           format: date
- *         fecha_fin:
- *           type: string
- *           format: date
- *         cantidad:
- *           type: integer
- *         galera:
- *           type: string
- *         estado:
- *           type: string
- *           enum: [Activo, Inactivo, Desalojado]
- *         observaciones:
- *           type: string
- */
 
-/**
- * @swagger
- * /lotes:
- *   get:
- *     summary: Obtener lotes
- *     tags: [Lotes]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *       - in: query
- *         name: estado
- *         schema:
- *           type: string
- *       - in: query
- *         name: tipo
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Lista de lotes
- */
 export const getLotes = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
@@ -127,27 +65,6 @@ export const getLotes = async (req: AuthenticatedRequest, res: Response): Promis
   }
 }
 
-/**
- * @swagger
- * /lotes/{id}:
- *   get:
- *     summary: Obtener lote por ID
- *     tags: [Lotes]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Datos del lote
- *       404:
- *         description: Lote no encontrado
- */
 export const getLoteById = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -190,46 +107,6 @@ export const getLoteById = async (req: AuthenticatedRequest, res: Response) => {
   }
 }
 
-/**
- * @swagger
- * /lotes:
- *   post:
- *     summary: Crear nuevo lote
- *     tags: [Lotes]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - tipo
- *               - fecha_inicio
- *               - cantidad
- *               - galera
- *             properties:
- *               tipo:
- *                 type: string
- *                 enum: [Ponedoras, Engorde]
- *               fecha_inicio:
- *                 type: string
- *                 format: date
- *               fecha_fin:
- *                 type: string
- *                 format: date
- *               cantidad:
- *                 type: integer
- *               galera:
- *                 type: string
- *               observaciones:
- *                 type: string
- *     responses:
- *       201:
- *         description: Lote creado exitosamente
- */
 export const createLote = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -270,33 +147,6 @@ export const createLote = async (req: AuthenticatedRequest, res: Response) => {
   }
 }
 
-/**
- * @swagger
- * /lotes/{id}:
- *   put:
- *     summary: Actualizar lote
- *     tags: [Lotes]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Lote'
- *     responses:
- *       200:
- *         description: Lote actualizado exitosamente
- *       404:
- *         description: Lote no encontrado
- */
 export const updateLote = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -344,29 +194,6 @@ export const updateLote = async (req: AuthenticatedRequest, res: Response) => {
   }
 }
 
-/**
- * @swagger
- * /lotes/{id}:
- *   delete:
- *     summary: Eliminar lote
- *     tags: [Lotes]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Lote eliminado exitosamente
- *       404:
- *         description: Lote no encontrado
- *       400:
- *         description: No se puede eliminar el lote (tiene aves asociadas)
- */
 export const deleteLote = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {

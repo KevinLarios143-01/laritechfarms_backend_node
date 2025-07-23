@@ -10,77 +10,7 @@ import {
   validateRequired
 } from '../utils/helpers'
 
-/**
- * @swagger
- * components:
- *   schemas:
- *     Ave:
- *       type: object
- *       properties:
- *         id_ave:
- *           type: integer
- *         id_tenant:
- *           type: integer
- *         tipo:
- *           type: string
- *           enum: [Ponedoras, Engorde]
- *         edad:
- *           type: integer
- *         estado:
- *           type: string
- *           enum: [Viva, Muerta, Vendida, Descarte]
- *         produccion_huevos:
- *           type: integer
- *         peso:
- *           type: number
- *         id_lote:
- *           type: integer
- *         fecha_ingreso:
- *           type: string
- *           format: date
- *         fecha_salida:
- *           type: string
- *           format: date
- *         motivo_salida:
- *           type: string
- */
 
-/**
- * @swagger
- * /aves:
- *   get:
- *     summary: Obtener aves
- *     tags: [Aves]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *       - in: query
- *         name: estado
- *         schema:
- *           type: string
- *       - in: query
- *         name: tipo
- *         schema:
- *           type: string
- *       - in: query
- *         name: id_lote
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Lista de aves
- */
 export const getAves = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
@@ -135,27 +65,6 @@ export const getAves = async (req: AuthenticatedRequest, res: Response): Promise
   }
 }
 
-/**
- * @swagger
- * /aves/{id}:
- *   get:
- *     summary: Obtener ave por ID
- *     tags: [Aves]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Datos del ave
- *       404:
- *         description: Ave no encontrada
- */
 export const getAveById = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
@@ -200,48 +109,6 @@ export const getAveById = async (req: AuthenticatedRequest, res: Response): Prom
   }
 }
 
-/**
- * @swagger
- * /aves:
- *   post:
- *     summary: Crear nueva ave
- *     tags: [Aves]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - tipo
- *               - edad
- *               - estado
- *               - fecha_ingreso
- *             properties:
- *               tipo:
- *                 type: string
- *                 enum: [Ponedoras, Engorde]
- *               edad:
- *                 type: integer
- *               estado:
- *                 type: string
- *                 enum: [Viva, Muerta, Vendida, Descarte]
- *               peso:
- *                 type: number
- *               id_lote:
- *                 type: integer
- *               fecha_ingreso:
- *                 type: string
- *                 format: date
- *               produccion_huevos:
- *                 type: integer
- *     responses:
- *       201:
- *         description: Ave creada exitosamente
- */
 export const createAve = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
@@ -303,33 +170,6 @@ export const createAve = async (req: AuthenticatedRequest, res: Response): Promi
   }
 }
 
-/**
- * @swagger
- * /aves/{id}:
- *   put:
- *     summary: Actualizar ave
- *     tags: [Aves]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Ave'
- *     responses:
- *       200:
- *         description: Ave actualizada exitosamente
- *       404:
- *         description: Ave no encontrada
- */
 export const updateAve = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
@@ -379,19 +219,6 @@ export const updateAve = async (req: AuthenticatedRequest, res: Response): Promi
   }
 }
 
-/**
- * @swagger
- * /aves/estadisticas:
- *   get:
- *     summary: Obtener estadísticas de aves
- *     tags: [Aves]
- *     security:
- *       - bearerAuth: []
- *       - tenantHeader: []
- *     responses:
- *       200:
- *         description: Estadísticas de aves
- */
 export const getEstadisticasAves = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {

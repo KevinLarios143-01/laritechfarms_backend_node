@@ -35,6 +35,64 @@ const options: swaggerJsdoc.Options = {
         }
       },
       schemas: {
+        Cliente: {
+          type: 'object',
+          properties: {
+            id_cliente: { type: 'integer' },
+            id_tenant: { type: 'integer' },
+            nombre: { type: 'string' },
+            telefono: { type: 'string' },
+            correo: { type: 'string' },
+            direccion: { type: 'string' },
+            ruc: { type: 'string' },
+            fecha_registro: { type: 'string', format: 'date' }
+          }
+        },
+        Ave: {
+          type: 'object',
+          properties: {
+            id_ave: { type: 'integer' },
+            id_tenant: { type: 'integer' },
+            tipo: { type: 'string', enum: ['Ponedoras', 'Engorde'] },
+            edad: { type: 'integer' },
+            estado: { type: 'string', enum: ['Viva', 'Muerta', 'Vendida', 'Descarte'] },
+            produccion_huevos: { type: 'integer' },
+            peso: { type: 'number' },
+            id_lote: { type: 'integer' },
+            fecha_ingreso: { type: 'string', format: 'date' },
+            fecha_salida: { type: 'string', format: 'date' },
+            motivo_salida: { type: 'string' }
+          }
+        },
+        Empleado: {
+          type: 'object',
+          properties: {
+            id_empleado: { type: 'integer' },
+            id_tenant: { type: 'integer' },
+            nombre: { type: 'string' },
+            apellido: { type: 'string' },
+            puesto: { type: 'string' },
+            salario: { type: 'number' },
+            fecha_contratacion: { type: 'string', format: 'date' },
+            activo: { type: 'boolean' },
+            telefono: { type: 'string' },
+            correo: { type: 'string' }
+          }
+        },
+        Lote: {
+          type: 'object',
+          properties: {
+            id_lote: { type: 'integer' },
+            id_tenant: { type: 'integer' },
+            tipo: { type: 'string', enum: ['Ponedoras', 'Engorde'] },
+            fecha_inicio: { type: 'string', format: 'date' },
+            fecha_fin: { type: 'string', format: 'date' },
+            cantidad: { type: 'integer' },
+            galera: { type: 'string' },
+            estado: { type: 'string', enum: ['Activo', 'Inactivo', 'Desalojado'] },
+            observaciones: { type: 'string' }
+          }
+        },
         Error: {
           type: 'object',
           properties: {
