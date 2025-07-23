@@ -1,0 +1,608 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// MODELO COMPLETO BASADO EN EL SCRIPT SQL PROPORCIONADO
+// ============================================
+
+model Tenant {
+  id_tenant        Int      @id @default(autoincrement())
+  nombre           String   @db.VarChar(100)
+  correo           String   @unique @db.VarChar(100)
+  telefono         String?  @db.VarChar(15)
+  fecha_registro   DateTime @default(now()) @db.Date
+  direccion        String?
+  ruc              String?  @db.VarChar(20)
+  activo           Boolean  @default(true)
+
+  // Relaciones
+  suscripciones       Suscripcion[]
+  usuarios            Usuario[]
+  configuraciones     ConfiguracionTenant[]
+  clientes            Cliente[]
+  lotes               Lote[]
+  aves                Ave[]
+  productos           Producto[]
+  ventas              Venta[]
+  detallesVenta       DetalleVenta[]
+  tickets             Ticket[]
+  controlMuertes      ControlMuertes[]
+  controlHuevos       ControlHuevos[]
+  comprasConcentrado  CompraConcentrado[]
+  controlesAgua       ControlAgua[]
+  controlesTransporte ControlTransporte[]
+  vehiculos           Vehiculo[]
+  empleados           Empleado[]
+  prestamosEmpleado   PrestamoEmpleado[]
+  asistencias         Asistencia[]
+  gastosOperacion     GastoOperacion[]
+  inventariosGranja   InventarioGranja[]
+  auditorias          Auditoria[]
+  saludAves           SaludAve[]
+  controlesPeso       ControlPeso[]
+  controlesGallinaza  ControlGallinaza[]
+  desalojoLotes       DesalojoLote[]
+  aplicacionesConcentrado AplicacionConcentrado[]
+
+  @@map("tenant")
+}
+
+model Plan {
+  id_plan               Int     @id @default(autoincrement())
+  nombre                String  @db.VarChar(50)
+  descripcion           String?
+  precio_mensual        Decimal @db.Decimal(10, 2)
+  limite_aves           Int?
+  limite_usuarios       Int?
+  funciones_disponibles Json?   @db.JsonB
+  nivel_prioridad       Int     @default(0)
+
+  // Relaciones
+  suscripciones Suscripcion[]
+
+  @@map("plan")
+}
+
+model Suscripcion {
+  id_suscripcion       Int      @id @default(autoincrement())
+  id_tenant            Int
+  id_plan              Int
+  fecha_inicio         DateTime @db.Date
+  fecha_vencimiento    DateTime @db.Date
+  estado               String   @db.VarChar(20) // 'activa', 'cancelada', 'suspendida', 'prueba'
+  metodo_pago          String?  @db.VarChar(50)
+  renovacion_automatica Boolean @default(true)
+
+  // Relaciones
+  tenant Tenant @relation(fields: [id_tenant], references: [id_tenant])
+  plan   Plan   @relation(fields: [id_plan], references: [id_plan])
+
+  @@map("suscripcion")
+}
+
+model Usuario {
+  id_usuario      Int       @id @default(autoincrement())
+  id_tenant       Int
+  email           String    @db.VarChar(255)
+  password_hash   String    @db.VarChar(255)
+  nombre          String    @db.VarChar(100)
+  apellido        String?   @db.VarChar(100)
+  rol             String    @db.VarChar(20) // 'admin', 'gerente', 'supervisor', 'operador'
+  activo          Boolean   @default(true)
+  ultimo_login    DateTime?
+  fecha_creacion  DateTime  @default(now())
+
+  // Relaciones
+  tenant            Tenant               @relation(fields: [id_tenant], references: [id_tenant])
+  sesiones          Sesion[]
+  auditorias        Auditoria[]
+  saludAves         SaludAve[]
+  ventas            Venta[]
+  tickets           Ticket[]
+  controlMuertes    ControlMuertes[]
+  controlHuevos     ControlHuevos[]
+  comprasConcentrado CompraConcentrado[]
+  controlesAgua     ControlAgua[]
+  controlesTransporte ControlTransporte[]
+  prestamosEmpleado PrestamoEmpleado[]
+  asistenciasRegistradas Asistencia[]    @relation("UsuarioRegistrador")
+  gastosOperacion   GastoOperacion[]
+  controlPeso       ControlPeso[]
+  controlGallinaza  ControlGallinaza[]
+  desalojos         DesalojoLote[]
+  aplicacionesConcentrado AplicacionConcentrado[]
+
+  @@unique([email, id_tenant], name: "uk_usuario_email")
+  @@map("usuario")
+}
+
+model Sesion {
+  id_sesion        String   @id @db.Uuid
+  id_usuario       Int
+  token_actual     String?  @db.VarChar(512)
+  fecha_creacion   DateTime @default(now())
+  fecha_expiracion DateTime
+  direccion_ip     String?  @db.VarChar(45)
+  dispositivo      String?  @db.VarChar(100)
+  user_agent       String?
+
+  // Relaciones
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@map("sesion")
+}
+
+model Auditoria {
+  id_auditoria      Int       @id @default(autoincrement())
+  id_tenant         Int
+  tabla_afectada    String    @db.VarChar(50)
+  id_registro       Int
+  operacion         String    @db.VarChar(10) // 'INSERT', 'UPDATE', 'DELETE'
+  datos_anteriores  Json?     @db.JsonB
+  datos_nuevos      Json?     @db.JsonB
+  id_usuario        Int?
+  fecha_hora        DateTime  @default(now())
+  direccion_ip      String?   @db.VarChar(45)
+
+  // Relaciones
+  tenant  Tenant   @relation(fields: [id_tenant], references: [id_tenant])
+  usuario Usuario? @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@map("auditoria")
+}
+
+model ConfiguracionTenant {
+  id_configuracion Int    @id @default(autoincrement())
+  id_tenant        Int
+  parametro        String @db.VarChar(50)
+  valor            String?
+
+  // Relaciones
+  tenant Tenant @relation(fields: [id_tenant], references: [id_tenant])
+
+  @@unique([id_tenant, parametro], name: "uk_config_tenant")
+  @@map("configuracion_tenant")
+}
+
+model Cliente {
+  id_cliente       Int      @id @default(autoincrement())
+  id_tenant        Int
+  nombre           String   @db.VarChar(100)
+  telefono         String?  @db.VarChar(20)
+  correo           String?  @db.VarChar(100)
+  direccion        String?
+  ruc              String?  @db.VarChar(20)
+  fecha_registro   DateTime @default(now()) @db.Date
+
+  // Relaciones
+  tenant Tenant @relation(fields: [id_tenant], references: [id_tenant])
+  ventas Venta[]
+
+  @@map("cliente")
+}
+
+model Lote {
+  id_lote       Int      @default(autoincrement())
+  id_tenant     Int
+  tipo          String?  @db.VarChar(20) // 'Ponedoras', 'Engorde'
+  fecha_inicio  DateTime @db.Date
+  fecha_fin     DateTime? @db.Date
+  cantidad      Int
+  galera        String?  @db.VarChar(50)
+  estado        String   @default("Activo") @db.VarChar(20) // 'Activo', 'Inactivo', 'Desalojado'
+  observaciones String?
+
+  // Relaciones
+  tenant    Tenant         @relation(fields: [id_tenant], references: [id_tenant])
+  aves      Ave[]
+  desalojos DesalojoLote[]
+
+  @@id([id_lote, id_tenant])
+  @@map("lote")
+}
+
+model Ave {
+  id_ave           Int      @default(autoincrement())
+  id_tenant        Int
+  tipo             String?  @db.VarChar(20) // 'Ponedoras', 'Engorde'
+  edad             Int
+  estado           String   @db.VarChar(20) // 'Viva', 'Muerta', 'Vendida', 'Descarte'
+  produccion_huevos Int     @default(0)
+  peso             Decimal  @default(0.0) @db.Decimal(6, 2)
+  id_lote          Int?
+  fecha_ingreso    DateTime @db.Date
+  fecha_salida     DateTime? @db.Date
+  motivo_salida    String?  @db.VarChar(100)
+
+  // Relaciones
+  tenant         Tenant           @relation(fields: [id_tenant], references: [id_tenant])
+  lote           Lote?            @relation(fields: [id_lote, id_tenant], references: [id_lote, id_tenant])
+  saludAves      SaludAve[]
+  controlMuertes ControlMuertes[]
+  controlHuevos  ControlHuevos[]
+  controlPeso    ControlPeso[]
+
+  @@id([id_ave, id_tenant])
+  @@map("ave")
+}
+
+model SaludAve {
+  id_salud            Int      @default(autoincrement())
+  id_tenant           Int
+  id_ave              Int
+  fecha               DateTime @db.Date
+  tipo_tratamiento    String   @db.VarChar(50)
+  medidas             String?  @db.VarChar(100)
+  cantidad            Float?
+  descripcion         String?
+  costo               Decimal? @db.Decimal(10, 2)
+  aplicacion_productos String?
+  id_usuario          Int?
+
+  // Relaciones
+  ave     Ave      @relation(fields: [id_ave, id_tenant], references: [id_ave, id_tenant])
+  tenant  Tenant   @relation(fields: [id_tenant], references: [id_tenant])
+  usuario Usuario? @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@id([id_salud, id_tenant])
+  @@map("salud_ave")
+}
+
+model Producto {
+  id_producto   Int      @default(autoincrement())
+  id_tenant     Int
+  nombre        String   @db.VarChar(100)
+  tamanio       String?  @db.VarChar(20)
+  precio        Decimal  @db.Decimal(10, 2)
+  stock         Int      @default(0)
+  categoria     String?  @db.VarChar(50)
+  activo        Boolean  @default(true)
+
+  // Relaciones
+  tenant        Tenant         @relation(fields: [id_tenant], references: [id_tenant])
+  detallesVenta DetalleVenta[]
+
+  @@id([id_producto, id_tenant])
+  @@map("producto")
+}
+
+model Venta {
+  id_venta      Int      @default(autoincrement())
+  id_tenant     Int
+  id_cliente    Int?
+  fecha         DateTime @db.Date
+  total         Decimal  @db.Decimal(10, 2)
+  estado        String   @default("Completada") @db.VarChar(20) // 'Completada', 'Cancelada', 'Pendiente'
+  id_usuario    Int?
+  observaciones String?
+
+  // Relaciones
+  tenant        Tenant         @relation(fields: [id_tenant], references: [id_tenant])
+  cliente       Cliente?       @relation(fields: [id_cliente], references: [id_cliente])
+  usuario       Usuario?       @relation(fields: [id_usuario], references: [id_usuario])
+  detallesVenta DetalleVenta[]
+  tickets       Ticket[]
+
+  @@id([id_venta, id_tenant])
+  @@map("venta")
+}
+
+model DetalleVenta {
+  id_detalle      Int     @default(autoincrement())
+  id_tenant       Int
+  id_venta        Int
+  id_producto     Int
+  cantidad        Int
+  precio_unitario Decimal @db.Decimal(10, 2)
+  // subtotal se calcula automáticamente en la base de datos
+
+  // Relaciones
+  tenant   Tenant  @relation(fields: [id_tenant], references: [id_tenant])
+  venta    Venta   @relation(fields: [id_venta, id_tenant], references: [id_venta, id_tenant])
+  producto Producto @relation(fields: [id_producto, id_tenant], references: [id_producto, id_tenant])
+
+  @@id([id_detalle, id_tenant])
+  @@map("detalle_venta")
+}
+
+model Ticket {
+  id_ticket           Int      @default(autoincrement())
+  id_tenant           Int
+  id_venta            Int
+  fecha               DateTime @db.Date
+  total               Decimal  @db.Decimal(10, 2)
+  metodo_pago         String   @db.VarChar(50)
+  estado              String   @default("Pendiente") @db.VarChar(20) // 'Pendiente', 'Pagado', 'Anulado'
+  codigo_autorizacion String?  @db.VarChar(100)
+  id_usuario          Int?
+
+  // Relaciones
+  venta   Venta    @relation(fields: [id_venta, id_tenant], references: [id_venta, id_tenant])
+  tenant  Tenant   @relation(fields: [id_tenant], references: [id_tenant])
+  usuario Usuario? @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@id([id_ticket, id_tenant])
+  @@map("ticket")
+}
+
+model ControlMuertes {
+  id_control_muertes Int      @default(autoincrement())
+  id_tenant          Int
+  id_ave             Int?
+  fecha              DateTime @db.Date
+  cantidad_muertes   Int
+  causa_principal    String?  @db.VarChar(100)
+  accion_correctiva  String?
+  id_usuario         Int?
+
+  // Relaciones
+  ave     Ave?     @relation(fields: [id_ave, id_tenant], references: [id_ave, id_tenant])
+  tenant  Tenant   @relation(fields: [id_tenant], references: [id_tenant])
+  usuario Usuario? @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@id([id_control_muertes, id_tenant])
+  @@map("control_muertes")
+}
+
+model ControlHuevos {
+  id_control_huevos Int      @default(autoincrement())
+  id_tenant         Int
+  id_ave            Int?
+  fecha             DateTime @db.Date
+  cantidad_huevos   Int
+  calidad           String?  @db.VarChar(20) // 'Excelente', 'Buena', 'Regular', 'Mala'
+  id_usuario        Int?
+
+  // Relaciones
+  ave     Ave?     @relation(fields: [id_ave, id_tenant], references: [id_ave, id_tenant])
+  tenant  Tenant   @relation(fields: [id_tenant], references: [id_tenant])
+  usuario Usuario? @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@id([id_control_huevos, id_tenant])
+  @@map("control_huevos")
+}
+
+model CompraConcentrado {
+  id_compra   Int      @id @default(autoincrement())
+  id_tenant   Int
+  fecha       DateTime @db.Date
+  cantidad_kg Decimal  @db.Decimal(10, 2)
+  costo_total Decimal  @db.Decimal(10, 2)
+  galera      String?  @db.VarChar(50)
+  proveedor   String?  @db.VarChar(100)
+  id_usuario  Int?
+
+  // Relaciones
+  tenant      Tenant                   @relation(fields: [id_tenant], references: [id_tenant])
+  usuario     Usuario?                 @relation(fields: [id_usuario], references: [id_usuario])
+  aplicaciones AplicacionConcentrado[]
+
+  @@map("compra_concentrado")
+}
+
+model ControlPeso {
+  id_control    Int      @default(autoincrement())
+  id_tenant     Int
+  id_ave        Int
+  fecha         DateTime @db.Date
+  peso          Decimal  @db.Decimal(6, 2)
+  observaciones String?
+  id_usuario    Int?
+
+  // Relaciones
+  ave     Ave      @relation(fields: [id_ave, id_tenant], references: [id_ave, id_tenant])
+  tenant  Tenant   @relation(fields: [id_tenant], references: [id_tenant])
+  usuario Usuario? @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@id([id_control, id_tenant])
+  @@map("control_peso")
+}
+
+model ControlGallinaza {
+  id_gallinaza  Int      @id @default(autoincrement())
+  id_tenant     Int
+  fecha         DateTime @db.Date
+  cantidad_kg   Decimal  @db.Decimal(10, 2)
+  destino       String?  @db.VarChar(100)
+  observaciones String?
+  id_usuario    Int?
+
+  // Relaciones
+  tenant  Tenant   @relation(fields: [id_tenant], references: [id_tenant])
+  usuario Usuario? @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@map("control_gallinaza")
+}
+
+model DesalojoLote {
+  id_desalojo   Int      @id @default(autoincrement())
+  id_tenant     Int
+  id_lote       Int
+  fecha         DateTime @db.Date
+  motivo        String
+  observaciones String?
+  id_usuario    Int?
+
+  // Relaciones
+  tenant  Tenant   @relation(fields: [id_tenant], references: [id_tenant])
+  lote    Lote     @relation(fields: [id_lote, id_tenant], references: [id_lote, id_tenant])
+  usuario Usuario? @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@map("desalojo_lote")
+}
+
+model AplicacionConcentrado {
+  id_aplicacion Int      @id @default(autoincrement())
+  id_tenant     Int
+  fecha         DateTime @db.Date
+  galera        String   @db.VarChar(50)
+  cantidad_kg   Decimal  @db.Decimal(10, 2)
+  id_compra     Int?
+  observaciones String?
+  id_usuario    Int?
+
+  // Relaciones
+  tenant  Tenant             @relation(fields: [id_tenant], references: [id_tenant])
+  compra  CompraConcentrado? @relation(fields: [id_compra], references: [id_compra])
+  usuario Usuario?           @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@map("aplicacion_concentrado")
+}
+
+model ControlAgua {
+  id_control_agua      Int      @id @default(autoincrement())
+  id_tenant            Int
+  fecha                DateTime @db.Date
+  litros_consumidos    Decimal  @db.Decimal(10, 2)
+  costo_bombeo         Decimal? @db.Decimal(10, 2)
+  promedio_esperado    Decimal? @db.Decimal(10, 2)
+  productos_implicados String?
+  observaciones        String?
+  id_usuario           Int?
+
+  // Relaciones
+  tenant  Tenant   @relation(fields: [id_tenant], references: [id_tenant])
+  usuario Usuario? @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@map("control_agua")
+}
+
+model ControlTransporte {
+  id_transporte     Int      @id @default(autoincrement())
+  id_tenant         Int
+  fecha             DateTime @db.Date
+  tipo_operacion    String   @db.VarChar(50)
+  galones_aplicados Decimal? @db.Decimal(10, 2)
+  costo_total       Decimal  @db.Decimal(10, 2)
+  id_vehiculo       Int?
+  observaciones     String?
+  id_usuario        Int?
+
+  // Relaciones
+  tenant   Tenant    @relation(fields: [id_tenant], references: [id_tenant])
+  vehiculo Vehiculo? @relation(fields: [id_vehiculo], references: [id_vehiculo])
+  usuario  Usuario?  @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@map("control_transporte")
+}
+
+model Vehiculo {
+  id_vehiculo        Int      @id @default(autoincrement())
+  id_tenant          Int
+  tipo               String   @db.VarChar(50)
+  placa              String   @db.VarChar(20)
+  marca              String   @db.VarChar(50)
+  modelo             String   @db.VarChar(50)
+  anio               Int?
+  estado             String   @default("Activo") @db.VarChar(20) // 'Activo', 'Mantenimiento', 'Inactivo'
+  capacidad          Decimal? @db.Decimal(10, 2)
+  fecha_adquisicion  DateTime? @db.Date
+
+  // Relaciones
+  tenant            Tenant             @relation(fields: [id_tenant], references: [id_tenant])
+  controlesTransporte ControlTransporte[]
+
+  @@unique([id_tenant, placa], name: "uk_vehiculo_placa")
+  @@map("vehiculo")
+}
+
+model Empleado {
+  id_empleado        Int      @id @default(autoincrement())
+  id_tenant          Int
+  nombre             String   @db.VarChar(100)
+  apellido           String   @db.VarChar(100)
+  puesto             String   @db.VarChar(50)
+  salario            Decimal  @db.Decimal(10, 2)
+  fecha_contratacion DateTime @db.Date
+  activo             Boolean  @default(true)
+  telefono           String?  @db.VarChar(20)
+  correo             String?  @db.VarChar(100)
+
+  // Relaciones
+  tenant    Tenant            @relation(fields: [id_tenant], references: [id_tenant])
+  prestamos PrestamoEmpleado[]
+  asistencias Asistencia[]
+
+  @@map("empleado")
+}
+
+model PrestamoEmpleado {
+  id_prestamo  Int      @id @default(autoincrement())
+  id_tenant    Int
+  id_empleado  Int
+  fecha        DateTime @db.Date
+  monto        Decimal  @db.Decimal(10, 2)
+  descripcion  String?
+  estado       String   @db.VarChar(20) // 'Pendiente', 'Pagado', 'Cancelado'
+  cuotas       Int?
+  id_usuario   Int?
+
+  // Relaciones
+  tenant   Tenant   @relation(fields: [id_tenant], references: [id_tenant])
+  empleado Empleado @relation(fields: [id_empleado], references: [id_empleado])
+  usuario  Usuario? @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@map("prestamo_empleado")
+}
+
+model Asistencia {
+  id_asistencia       Int      @id @default(autoincrement())
+  id_tenant           Int
+  id_empleado         Int
+  fecha               DateTime @db.Date
+  hora_entrada        DateTime @db.Time
+  hora_salida         DateTime? @db.Time
+  estado              String?  @db.VarChar(20) // 'Presente', 'Tardanza', 'Ausente', 'Justificado'
+  observaciones       String?
+  id_usuario_registro Int?
+
+  // Relaciones
+  tenant          Tenant   @relation(fields: [id_tenant], references: [id_tenant])
+  empleado        Empleado @relation(fields: [id_empleado], references: [id_empleado])
+  usuarioRegistro Usuario? @relation("UsuarioRegistrador", fields: [id_usuario_registro], references: [id_usuario])
+
+  @@map("asistencia")
+}
+
+model GastoOperacion {
+  id_gasto      Int      @id @default(autoincrement())
+  id_tenant     Int
+  fecha         DateTime @db.Date
+  categoria     String   @db.VarChar(50)
+  descripcion   String?
+  monto         Decimal  @db.Decimal(10, 2)
+  metodo_pago   String?  @db.VarChar(50)
+  id_usuario    Int?
+
+  // Relaciones
+  tenant  Tenant   @relation(fields: [id_tenant], references: [id_tenant])
+  usuario Usuario? @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@map("gasto_operacion")
+}
+
+model InventarioGranja {
+  id_inventario Int     @id @default(autoincrement())
+  id_tenant     Int
+  nombre        String  @db.VarChar(100)
+  cantidad      Int
+  unidad        String  @db.VarChar(20)
+  categoria     String? @db.VarChar(50)
+  minimo_stock  Int?
+  proveedor     String? @db.VarChar(100)
+  observaciones String?
+
+  // Relaciones
+  tenant Tenant @relation(fields: [id_tenant], references: [id_tenant])
+
+  @@map("inventario_granja")
+}
